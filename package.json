@@ -48,6 +48,7 @@
 	"dependencies": {
 		"husky": "^8.0.3",
 		"immer": "^10.0.3",
+		"lodash-es": "^4.17.21",
 		"object-traversal": "^1.0.1",
 		"radash": "^11.0.0",
 		"typedb-driver": "2.25.3",
