@@ -57,6 +57,7 @@ export const runTQLQuery: PipelineOperation = async (req, res) => {
 		})) || [],
 	);
 	await transaction.close();
+
 	res.rawTqlRes = {
 		entity: entityConceptMapGroups,
 		...(rolesConceptMapGroups?.length && { roles: rolesConceptMapGroups }),
@@ -64,5 +65,5 @@ export const runTQLQuery: PipelineOperation = async (req, res) => {
 			relations: relationConceptMapGroups,
 		}),
 	};
-	// console.log('rawTqlRes', res.rawTqlRes);
+	console.log('rawTqlRes', res.rawTqlRes);
 };

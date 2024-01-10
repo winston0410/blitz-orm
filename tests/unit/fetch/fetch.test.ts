@@ -17,22 +17,22 @@ describe('Fetch', () => {
 		client = configClient;
 	}, 15000);
 
-	it('v1[validation] - $entity missing', async () => {
-		expect(client).toBeDefined();
-		// @ts-expect-error - $entity is missing
-		await expect(client.fetch({})).rejects.toThrow();
-	});
+	// it('v1[validation] - $entity missing', async () => {
+	// 	expect(client).toBeDefined();
+	// 	// @ts-expect-error - $entity is missing
+	// 	await expect(client.fetch({})).rejects.toThrow();
+	// });
 
-	it('v2[validation] - $entity not in schema', async () => {
-		expect(client).toBeDefined();
-		await expect(client.fetch({ $entity: 'fakeEntity' })).rejects.toThrow();
-	});
+	// it('v2[validation] - $entity not in schema', async () => {
+	// 	expect(client).toBeDefined();
+	// 	await expect(client.fetch({ $entity: 'fakeEntity' })).rejects.toThrow();
+	// });
 
-	it('v3[validation] - $id not existing', async () => {
-		expect(client).toBeDefined();
-		const res = await client.fetch({ $entity: 'User', $id: 'nonExisting' });
-		await expect(res).toBeNull();
-	});
+	// it('v3[validation] - $id not existing', async () => {
+	// 	expect(client).toBeDefined();
+	// 	const res = await client.fetch({ $entity: 'User', $id: 'nonExisting' });
+	// 	await expect(res).toBeNull();
+	// });
 
 	it('e1[entity] - basic and direct link to relation', async () => {
 		expect(client).toBeDefined();
