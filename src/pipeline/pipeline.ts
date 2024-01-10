@@ -78,6 +78,7 @@ type Pipeline = PipelineOperation[];
 const Pipelines: Record<string, Pipeline> = {
 	query: [parseBQLQuery, buildTQLQuery, runTQLQuery, parseTQLRes, dispatchPipeline],
 	mutation: [fillBQLMutation, preQuery, parseBQLMutation, buildTQLMutation, runTQLMutation, parseTQLRes],
+	fetch: [parseBQLQuery, buildTQLQuery, runTQLQuery, parseTQLRes, dispatchPipeline],
 };
 
 // const finalPipeline = [buildBQLTree, processFieldsOperator, processIdOperator];
@@ -119,6 +120,23 @@ const runPipeline = async (
 	}
 	return res.bqlRes as BQLResponse;
 };
+
+export const fetchPipeline = (
+	bqlRequest: RawBQLRequest,
+	bormConfig: BormConfig,
+	bormSchema: EnrichedBormSchema,
+	dbHandles: DBHandles,
+) =>
+	runPipeline(
+		Pipelines.fetch,
+		{
+			config: bormConfig,
+			schema: bormSchema,
+			rawBqlRequest: bqlRequest,
+			dbHandles,
+		},
+		{},
+	);
 
 export const queryPipeline = (
 	bqlRequest: RawBQLRequest,

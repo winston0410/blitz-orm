@@ -4,7 +4,7 @@ import { TypeDB, SessionType } from 'typedb-driver';
 import { defaultConfig } from './default.config';
 import { bormDefine } from './define';
 import { enrichSchema } from './helpers';
-import { mutationPipeline, queryPipeline } from './pipeline/pipeline';
+import { mutationPipeline, queryPipeline, fetchPipeline } from './pipeline/pipeline';
 import type {
 	BormConfig,
 	BormSchema,
@@ -106,6 +106,17 @@ class BormClient {
 	define = async () => {
 		await this.#enforceConnection();
 		return bormDefine(this.config, this.schema, this.dbHandles);
+	};
+
+	/// same as the query pipeline, no automatic type intepolation at the moment
+	fetch = async (query: RawBQLQuery, queryConfig?: QueryConfig) => {
+		await this.#enforceConnection();
+		const qConfig = {
+			...this.config,
+			query: { ...defaultConfig.query, ...this.config.query, ...queryConfig },
+		};
+		// @ts-expect-error - enforceConnection ensures dbHandles is defined
+		return fetchPipeline(query, qConfig, this.schema, this.dbHandles);
 	};
 
 	/// no types yet, but we can do "as ..." after getting the type fro the schema
