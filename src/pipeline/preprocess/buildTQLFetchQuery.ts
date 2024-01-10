@@ -42,8 +42,7 @@ export const buildTQLFetchQuery: PipelineOperation = async (req) => {
 				}))
 			: [];
 
-	// when typeQL stops combination: const queryStr = `match $${thingPath} ${rolesQuery} isa ${thingPath}, has attribute $attribute ${localFiltersTql} ${idFilter} get; group $${thingPath};`;
-	const queryStr = `match $${thingPath}  isa ${thingPath}, has attribute $attribute ${localFiltersTql} ${idFilter} fetch $${thingPath};`;
+	const queryStr = `match $${thingPath}  isa ${thingPath}, has attribute $attribute ${localFiltersTql} ${idFilter} fetch $${thingPath}: attribute;`;
 
 	const rolesObj = allRoles.map((role) => {
 		// todo role played by multiple linkfields
@@ -98,8 +97,8 @@ export const buildTQLFetchQuery: PipelineOperation = async (req) => {
 			)
 			.join(' ');
 
-		const group = `fetch $${linkField.plays};`;
-		const request = `${entityMatch} ${roles} ${relationMatchEnd} ${relationIdFilters} ${group}`;
+		const fetch = `fetch $${linkField.plays}: attribute;`;
+		const request = `${entityMatch} ${roles} ${relationMatchEnd} ${relationIdFilters} ${fetch}`;
 		return { relation: relationPath, entity: thingPath, request };
 	});
 
