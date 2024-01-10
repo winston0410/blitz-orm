@@ -91,7 +91,7 @@ const runPipeline = async (
 	// todo: ts antoine
 	// eslint-disable-next-line consistent-return
 ): Promise<BQLResponse> => {
-	// console.log('Heeeeey', pipeline);
+	// console.log('Heeeeey', pipeline, req, res);
 	// todo: ts antoine
 	// eslint-disable-next-line no-restricted-syntax
 	for (const operation of pipeline) {

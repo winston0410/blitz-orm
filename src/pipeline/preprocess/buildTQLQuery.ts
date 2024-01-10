@@ -39,7 +39,7 @@ export const buildTQLQuery: PipelineOperation = async (req) => {
 					path: k,
 					var: `$${k}`,
 					schema: v,
-			  }))
+				}))
 			: [];
 
 	// when typeQL stops combination: const queryStr = `match $${thingPath} ${rolesQuery} isa ${thingPath}, has attribute $attribute ${localFiltersTql} ${idFilter} get; group $${thingPath};`;

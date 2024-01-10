@@ -50,7 +50,7 @@
 		"immer": "^10.0.3",
 		"object-traversal": "^1.0.1",
 		"radash": "^11.0.0",
-		"typedb-driver": "^2.25.3",
+		"typedb-driver": "2.25.3",
 		"uuid": "^9.0.1"
 	},
 	"devDependencies": {

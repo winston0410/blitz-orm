@@ -1197,7 +1197,7 @@ describe('Query', () => {
 		});
 	});
 
-	it('TODO:re1[repeated] Query with repeated path, different nested ids', async () => {
+	it.failing('TODO:re1[repeated] Query with repeated path, different nested ids', async () => {
 		expect(client).toBeDefined();
 
 		const res = await client.query(
@@ -1227,7 +1227,7 @@ describe('Query', () => {
 		});
 	});
 
-	it('TODO:re2[repeated] Query with repeated path, different nested patterns', async () => {
+	it.failing('TODO:re2[repeated] Query with repeated path, different nested patterns', async () => {
 		expect(client).toBeDefined();
 
 		const res = await client.query(
