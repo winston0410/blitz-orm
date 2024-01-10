@@ -45,7 +45,8 @@ export const runTQLFetch: PipelineOperation = async (req, res) => {
 		rolesStreams?.map(async (role) => ({
 			path: role.path,
 			ownerPath: role.owner,
-			conceptMapGroups: await role.stream.collect(),
+			conceptMapGroups: [],
+			jsonObjs: await role.stream.collect(),
 		})) || [],
 	);
 
@@ -53,13 +54,14 @@ export const runTQLFetch: PipelineOperation = async (req, res) => {
 		relationStreams?.map(async (relation) => ({
 			relation: relation.relation,
 			entity: relation.entity,
-			conceptMapGroups: await relation.stream.collect(),
+			conceptMapGroups: [],
+			jsonObjs: await relation.stream.collect(),
 		})) || [],
 	);
 	await transaction.close();
 
 	res.rawTqlRes = {
-		entity: entityConceptMapGroups,
+		entityJsonObj: entityConceptMapGroups,
 		...(rolesConceptMapGroups?.length && { roles: rolesConceptMapGroups }),
 		...(relationConceptMapGroups?.length && {
 			relations: relationConceptMapGroups,
