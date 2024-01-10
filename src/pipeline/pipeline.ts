@@ -8,7 +8,7 @@ import { buildTQLMutation } from './preprocess/buildTQLMutation';
 import { fillBQLMutation } from './preprocess/fill';
 import { parseBQLMutation } from './preprocess/parseBQLMutation';
 import { preQuery } from './preprocess/preQuery';
-import { runTQLQuery } from './transaction';
+import { runTQLQuery, runTQLFetch } from './transaction';
 import { runTQLMutation } from './transaction/runTQLMutation';
 import type {
 	BormConfig,
@@ -44,17 +44,18 @@ type Response = {
 	rawTqlRes?: {
 		// queries
 		entity?: ConceptMapGroup[];
+		entityJsonObj?: JSONObject[];
 		roles?: {
 			path: string;
 			ownerPath: string;
 			conceptMapGroups: ConceptMapGroup[];
-			jsonObjs?: JSONObject[];
+			jsonObj?: JSONObject[];
 		}[];
 		relations?: {
 			relation: string;
 			entity: string;
 			conceptMapGroups: ConceptMapGroup[];
-			jsonObjs?: JSONObject[];
+			jsonObj?: JSONObject[];
 		}[];
 		// mutations
 		insertions?: ConceptMap[];
@@ -80,7 +81,7 @@ type Pipeline = PipelineOperation[];
 const Pipelines: Record<string, Pipeline> = {
 	query: [parseBQLQuery, buildTQLQuery, runTQLQuery, parseTQLRes, dispatchPipeline],
 	mutation: [fillBQLMutation, preQuery, parseBQLMutation, buildTQLMutation, runTQLMutation, parseTQLRes],
-	fetch: [parseBQLQuery, buildTQLFetchQuery, runTQLQuery],
+	fetch: [parseBQLQuery, buildTQLFetchQuery, runTQLFetch],
 };
 
 // const finalPipeline = [buildBQLTree, processFieldsOperator, processIdOperator];
