@@ -61,7 +61,7 @@ export const runTQLFetch: PipelineOperation = async (req, res) => {
 	await transaction.close();
 
 	res.rawTqlRes = {
-		entityJsonObj: entityConceptMapGroups,
+		entityJsonObjs: entityConceptMapGroups,
 		...(rolesConceptMapGroups?.length && { roles: rolesConceptMapGroups }),
 		...(relationConceptMapGroups?.length && {
 			relations: relationConceptMapGroups,

@@ -44,18 +44,18 @@ type Response = {
 	rawTqlRes?: {
 		// queries
 		entity?: ConceptMapGroup[];
-		entityJsonObj?: JSONObject[];
+		entityJsonObjs?: JSONObject[];
 		roles?: {
 			path: string;
 			ownerPath: string;
 			conceptMapGroups: ConceptMapGroup[];
-			jsonObj?: JSONObject[];
+			jsonObjs?: JSONObject[];
 		}[];
 		relations?: {
 			relation: string;
 			entity: string;
 			conceptMapGroups: ConceptMapGroup[];
-			jsonObj?: JSONObject[];
+			jsonObjs?: JSONObject[];
 		}[];
 		// mutations
 		insertions?: ConceptMap[];

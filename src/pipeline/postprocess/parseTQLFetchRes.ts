@@ -48,7 +48,10 @@ export const parseTQLFetchRes: PipelineOperation = async (req, res) => {
 		throw new Error('unimplmented');
 	}
 
-	const result = rawTqlRes?.entityJsonObj?.map((jsonObj) => {
+	console.log('hi roles', rawTqlRes?.roles);
+	console.log('hi relations', JSON.stringify(rawTqlRes?.relations?.flatMap((r) => r.jsonObjs), null, 2));
+
+	const result = rawTqlRes?.entityJsonObjs?.map((jsonObj) => {
 		const entityName = query.$entity.name;
 		const item = jsonObj[entityName];
 
@@ -62,14 +65,19 @@ export const parseTQLFetchRes: PipelineOperation = async (req, res) => {
 
 		const { attribute } = item as FromSchema<typeof schema>;
 
-		console.log('hi attribute', attribute);
+		// console.log('hi attribute', attribute);
 
 		const obj = Object.fromEntries([
 			['$entity', entityName],
 			...attribute.map((a) => {
-				// console.log('test', a.type.label);
+				// console.log('is include', a.type.label.includes(entityName));
+				// const key = a.type.label.includes(entityName)
+				// 	? a.type.label.slice(a.type.label.indexOf(`${entityName}.`) + 1)
+				// 	: a.type.label;
 
-				return [a.type.label, a.value];
+				const key = a.type.label;
+
+				return [key, a.value];
 			}),
 		]);
 
