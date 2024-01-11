@@ -78,15 +78,23 @@ const parseAttributes = (req: Parameters<PipelineOperation>[0], payload: JSON, r
 					result['$id'] = attr.value;
 				}
 			}
-			// add preserved field
-			result['$entity'] = query.$entity.name;
+
+			result[`$${query['$entity'].thingType}`] = query.$entity.name;
 		} else {
 			// dealing with relations and roles, only return id at the moment
 			for (const attr of attribute.filter((attr) => attr.type.label === 'id')) {
-				if (Array.isArray(result[type.label.toLowerCase()])) {
-					(result[type.label.toLowerCase()] as Array<string>).push(attr.value);
+				const currOppositeLinkfield = req.schema.entities[type.label].linkFields?.find(
+					({ oppositeLinkFieldsPlayedBy }) => oppositeLinkFieldsPlayedBy[0].thing === query.$entity.name,
+				);
+
+				if (!currOppositeLinkfield) {
+					throw new Error('missing oppositeLinkfield');
+				}
+
+				if (Array.isArray(result[currOppositeLinkfield.plays])) {
+					(result[getPath(currOppositeLinkfield.plays)] as Array<string>).push(attr.value);
 				} else {
-					result[type.label.toLowerCase()] = [attr.value];
+					result[getPath(currOppositeLinkfield.plays)] = [attr.value];
 				}
 			}
 		}
@@ -98,11 +106,16 @@ const parseAttributes = (req: Parameters<PipelineOperation>[0], payload: JSON, r
 };
 
 export const parseTQLFetchRes: PipelineOperation = async (req, res) => {
+	const { bqlRequest } = req;
 	const { rawTqlRes } = res;
-
-	if (!rawTqlRes) {
-		throw new Error('rawTqlRes is undefined');
+	if (!bqlRequest) {
+		throw new Error('BQL request not parsed');
+	} else if (!rawTqlRes) {
+		throw new Error('TQL query not executed');
 	}
+
+	// console.log('check schema', JSON.stringify(req.schema, null, 2));
+	// console.log('what is entities', schema);
 
 	if (!rawTqlRes.entityJsonObjs) {
 		throw new Error('entityJsonObjs is undefined');

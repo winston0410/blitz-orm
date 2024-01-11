@@ -45,20 +45,6 @@ export const buildTQLFetch: PipelineOperation = async (req) => {
 
 	const queryStr = `match $${thingPath}  isa! ${thingPath}, has attribute $attribute ${localFiltersTql} ${idFilter} fetch $${thingPath}: attribute;`;
 
-	// const rolesObj = allRoles.map((role) => {
-	// 	// todo role played by multiple linkfields
-	// 	// if all roles are played by the same thing, thats fine
-	// 	if (!role.schema.playedBy || [...new Set(role.schema.playedBy?.map((x) => x.thing))].length !== 1) {
-	// 		throw new Error('Unsupported: Role played by multiple linkfields or none');
-	// 	}
-	// 	const roleThingName = role.schema.playedBy[0].thing;
-	// 	return {
-	// 		path: role.path,
-	// 		owner: thingPath,
-	// 		request: `match $${thingPath} (${role.path}: ${role.var} ) isa ${thingPath} ${idFilter} ${role.var} isa ${roleThingName}, has id ${role.var}_id; get; group $${thingPath};`,
-	// 	};
-	// });
-
 	const relations = currentThingSchema.linkFields?.flatMap((linkField) => {
 		// if the target is the relation
 		const dirRel = linkField.target === 'relation'; // direct relation
@@ -104,27 +90,13 @@ export const buildTQLFetch: PipelineOperation = async (req) => {
 				})
 				.join(' ')}`;
 
-		// const queryStr = `
-		//   match $User isa! User, has attribute $attribute, has id $User_id;
-		//   fetch $User: attribute;
-		//   accounts: {
-		//     match
-		//       (user: $User,accounts: $accounts ) isa User-Accounts; $accounts isa Account, has id $accounts_id;
-		//     fetch
-		//     $accounts: attribute;
-		//   };
-		// `;
-
 		const request = `${linkField.path}: { match ${roles} ${relationMatchEnd} ${relationIdFilters} fetch ${fetchTarget} };`;
+
 		return request;
 	});
 
-	console.log('hi relations', relations);
-
 	req.tqlRequest = {
 		entity: queryStr + relations?.join(EOL),
-		// ...(rolesObj?.length ? { roles: rolesObj } : {}),
-		// ...(relations?.length ? { relations } : {}),
 	};
-	console.log('req.tqlRequest', req.tqlRequest);
+	// console.log('req.tqlRequest', req.tqlRequest);
 };
