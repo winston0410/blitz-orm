@@ -119,11 +119,7 @@ export const buildTQLFetch: PipelineOperation = async (req) => {
 		return request;
 	});
 
-	console.log('hi str', relations?.join(EOL));
-
-	console.log('check queryStr', queryStr);
-
-	// + relations?.join(EOL),
+	console.log('hi relations', relations);
 
 	req.tqlRequest = {
 		entity: queryStr + relations?.join(EOL),

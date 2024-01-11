@@ -74,7 +74,7 @@ const parseAttributes = (req: Parameters<PipelineOperation>[0], payload: JSON, r
 				result[key] = attr.value;
 
 				if (key === 'id') {
-					// add preserved field
+					// NOTE Does not handle composite id, just like the exisitng query function
 					result['$id'] = attr.value;
 				}
 			}
