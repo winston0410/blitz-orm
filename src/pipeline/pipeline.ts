@@ -3,7 +3,7 @@ import type { ConceptMap, ConceptMapGroup, JSONObject } from 'typedb-driver';
 
 import { dispatchPipeline } from './control';
 import { buildBQLTree, parseTQLFetchRes, parseTQLRes } from './postprocess';
-import { parseBQLQuery, buildTQLQuery, buildTQLFetchQuery } from './preprocess';
+import { parseBQLQuery, buildTQLQuery, buildTQLFetch } from './preprocess';
 import { buildTQLMutation } from './preprocess/buildTQLMutation';
 import { fillBQLMutation } from './preprocess/fill';
 import { parseBQLMutation } from './preprocess/parseBQLMutation';
@@ -81,7 +81,7 @@ type Pipeline = PipelineOperation[];
 const Pipelines: Record<string, Pipeline> = {
 	query: [parseBQLQuery, buildTQLQuery, runTQLQuery, parseTQLRes, dispatchPipeline],
 	mutation: [fillBQLMutation, preQuery, parseBQLMutation, buildTQLMutation, runTQLMutation, parseTQLRes],
-	fetch: [parseBQLQuery, buildTQLFetchQuery, runTQLFetch, parseTQLFetchRes],
+	fetch: [parseBQLQuery, buildTQLFetch, runTQLFetch, parseTQLFetchRes],
 };
 
 // const finalPipeline = [buildBQLTree, processFieldsOperator, processIdOperator];

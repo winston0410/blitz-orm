@@ -36,6 +36,7 @@ describe('Fetch', () => {
 
 	it('e1[entity] - basic and direct link to relation', async () => {
 		expect(client).toBeDefined();
+		// const query = { $entity: 'User' };
 		const query = { $entity: 'User' };
 		const expectedRes = [
 			{

@@ -3,7 +3,7 @@ import { listify } from 'radash';
 import { getLocalFilters } from '../../helpers';
 import type { PipelineOperation } from '../pipeline';
 
-export const buildTQLFetchQuery: PipelineOperation = async (req) => {
+export const buildTQLFetch: PipelineOperation = async (req) => {
 	const { schema, bqlRequest } = req;
 	if (!bqlRequest?.query) {
 		throw new Error('BQL query not parsed');
@@ -42,7 +42,7 @@ export const buildTQLFetchQuery: PipelineOperation = async (req) => {
 				}))
 			: [];
 
-	const queryStr = `match $${thingPath}  isa ${thingPath}, has attribute $attribute ${localFiltersTql} ${idFilter} fetch $${thingPath}: attribute;`;
+	const queryStr = `match $${thingPath}  isa! ${thingPath}, has attribute $attribute ${localFiltersTql} ${idFilter} fetch $${thingPath}: attribute;`;
 
 	const rolesObj = allRoles.map((role) => {
 		// todo role played by multiple linkfields

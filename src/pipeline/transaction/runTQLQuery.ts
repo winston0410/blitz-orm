@@ -65,5 +65,5 @@ export const runTQLQuery: PipelineOperation = async (req, res) => {
 			relations: relationConceptMapGroups,
 		}),
 	};
-	console.log('rawTqlRes', res.rawTqlRes);
+	// console.log('rawTqlRes', res.rawTqlRes);
 };

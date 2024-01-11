@@ -67,5 +67,5 @@ export const runTQLFetch: PipelineOperation = async (req, res) => {
 			relations: relationConceptMapGroups,
 		}),
 	};
-	console.log('rawTqlRes', JSON.stringify(res.rawTqlRes, null, 2));
+	// console.log('rawTqlRes', JSON.stringify(res.rawTqlRes, null, 2));
 };
