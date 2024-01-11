@@ -1,39 +1,44 @@
 import type { PipelineOperation } from '../pipeline';
+import type { JSON } from 'typedb-driver';
 import type { FromSchema } from 'json-schema-to-ts';
 import Ajv from 'ajv';
-// import { set } from 'lodash-es'
 
-export const parseTQLFetchRes: PipelineOperation = async (req, res) => {
-	const ajv = new Ajv();
-
-	const schema = {
-		type: 'object',
-		required: ['attribute'],
-		properties: {
-			attribute: {
-				type: 'array',
-				items: {
-					type: 'object',
-					properties: {
-						value: { type: 'string' },
-						value_type: { type: 'string' },
-						type: {
-							type: 'object',
-							properties: {
-								label: { type: 'string' },
-								root: { type: 'string' },
-							},
-							required: ['label', 'root'],
+const schema = {
+	type: 'object',
+	required: ['attribute', 'type'],
+	properties: {
+		type: {
+			type: 'object',
+			properties: {
+				label: { type: 'string' },
+				root: { type: 'string' },
+			},
+			required: ['label', 'root'],
+		},
+		attribute: {
+			type: 'array',
+			items: {
+				type: 'object',
+				properties: {
+					value: { type: 'string' },
+					value_type: { type: 'string' },
+					type: {
+						type: 'object',
+						properties: {
+							label: { type: 'string' },
+							root: { type: 'string' },
 						},
+						required: ['label', 'root'],
 					},
-					required: ['type', 'value', 'value_type'],
 				},
+				required: ['type', 'value', 'value_type'],
 			},
 		},
-	} as const;
+	},
+} as const;
 
+const parseAttributes = (req: Parameters<PipelineOperation>[0], payload: JSON, result: Record<string, unknown>) => {
 	const { bqlRequest } = req;
-	const { rawTqlRes } = res;
 	if (!bqlRequest) {
 		throw new Error('BQL request not parsed');
 	}
@@ -48,39 +53,57 @@ export const parseTQLFetchRes: PipelineOperation = async (req, res) => {
 		throw new Error('unimplmented');
 	}
 
-	console.log('hi roles', rawTqlRes?.roles);
-	console.log('hi relations', JSON.stringify(rawTqlRes?.relations?.flatMap((r) => r.jsonObjs), null, 2));
-
-	const result = rawTqlRes?.entityJsonObjs?.map((jsonObj) => {
-		const entityName = query.$entity.name;
-		const item = jsonObj[entityName];
-
+	// @ts-expect-error fix later
+	if ('attribute' in payload) {
+		const ajv = new Ajv();
 		const validate = ajv.compile(schema);
-		const valid = validate(item);
+		const valid = validate(payload);
 
 		if (!valid) {
-			console.log('unimplemented payload', item);
+			console.log('unimplemented payload', payload);
 			throw new Error('unimplmented');
 		}
 
-		const { attribute } = item as FromSchema<typeof schema>;
+		const { attribute, type } = payload as FromSchema<typeof schema>;
 
-		// console.log('hi attribute', attribute);
+		if (type.label === query.$entity.name) {
+			// dealing with the main entity
+			for (const attr of attribute) {
+				result[attr.type.label] = attr.value;
+			}
+		} else {
+			// dealing with relations and roles, only return id at the moment
+			for (const attr of attribute.filter((attr) => attr.type.label === 'id')) {
+				if (Array.isArray(result[type.label.toLowerCase()])) {
+					(result[type.label.toLowerCase()] as Array<string>).push(attr.value);
+				} else {
+					result[type.label.toLowerCase()] = [attr.value];
+				}
+			}
+		}
+	} else {
+		for (const p of Object.values(payload)) {
+			parseAttributes(req, p, result);
+		}
+	}
+};
 
-		const obj = Object.fromEntries([
-			['$entity', entityName],
-			...attribute.map((a) => {
-				// console.log('is include', a.type.label.includes(entityName));
-				// const key = a.type.label.includes(entityName)
-				// 	? a.type.label.slice(a.type.label.indexOf(`${entityName}.`) + 1)
-				// 	: a.type.label;
+export const parseTQLFetchRes: PipelineOperation = async (req, res) => {
+	const { rawTqlRes } = res;
 
-				const key = a.type.label;
+	if (!rawTqlRes) {
+		throw new Error('rawTqlRes is undefined');
+	}
 
-				return [key, a.value];
-			}),
-		]);
+	if (!rawTqlRes.entityJsonObjs) {
+		throw new Error('entityJsonObjs is undefined');
+	}
 
-		console.log('test', obj);
+	res.bqlRes = rawTqlRes.entityJsonObjs.map((jsonObj) => {
+		const result = {};
+
+		parseAttributes(req, jsonObj, result);
+
+		return result;
 	});
 };

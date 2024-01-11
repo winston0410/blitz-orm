@@ -2,6 +2,7 @@ import { listify } from 'radash';
 
 import { getLocalFilters } from '../../helpers';
 import type { PipelineOperation } from '../pipeline';
+import { EOL } from 'os';
 
 export const buildTQLFetch: PipelineOperation = async (req) => {
 	const { schema, bqlRequest } = req;
@@ -44,36 +45,34 @@ export const buildTQLFetch: PipelineOperation = async (req) => {
 
 	const queryStr = `match $${thingPath}  isa! ${thingPath}, has attribute $attribute ${localFiltersTql} ${idFilter} fetch $${thingPath}: attribute;`;
 
-	const rolesObj = allRoles.map((role) => {
-		// todo role played by multiple linkfields
-		// if all roles are played by the same thing, thats fine
-		if (!role.schema.playedBy || [...new Set(role.schema.playedBy?.map((x) => x.thing))].length !== 1) {
-			throw new Error('Unsupported: Role played by multiple linkfields or none');
-		}
-		const roleThingName = role.schema.playedBy[0].thing;
-		return {
-			path: role.path,
-			owner: thingPath,
-			request: `match $${thingPath} (${role.path}: ${role.var} ) isa ${thingPath} ${idFilter} ${role.var} isa ${roleThingName}, has id ${role.var}_id; get; group $${thingPath};`,
-		};
-	});
+	// const rolesObj = allRoles.map((role) => {
+	// 	// todo role played by multiple linkfields
+	// 	// if all roles are played by the same thing, thats fine
+	// 	if (!role.schema.playedBy || [...new Set(role.schema.playedBy?.map((x) => x.thing))].length !== 1) {
+	// 		throw new Error('Unsupported: Role played by multiple linkfields or none');
+	// 	}
+	// 	const roleThingName = role.schema.playedBy[0].thing;
+	// 	return {
+	// 		path: role.path,
+	// 		owner: thingPath,
+	// 		request: `match $${thingPath} (${role.path}: ${role.var} ) isa ${thingPath} ${idFilter} ${role.var} isa ${roleThingName}, has id ${role.var}_id; get; group $${thingPath};`,
+	// 	};
+	// });
+
 	const relations = currentThingSchema.linkFields?.flatMap((linkField) => {
-		const relationIdParam = `$${linkField.plays}_id`;
-		let relationIdFilter = `, has ${idField} ${relationIdParam};`;
-		if (query.$id) {
-			if (Array.isArray(query.$id)) {
-				relationIdFilter += ` ${relationIdParam} like "${query.$id.join('|')}";`;
-			} else {
-				relationIdFilter += ` ${relationIdParam} "${query.$id}";`;
-			}
-		}
-		const entityMatch = `match $${linkField.plays} isa ${thingPath}${localFiltersTql} ${relationIdFilter}`;
 		// if the target is the relation
 		const dirRel = linkField.target === 'relation'; // direct relation
+
+		// FIXME handle later
+		if (dirRel) {
+			return '';
+		}
+
 		const tarRel = linkField.relation;
 		const relVar = `$${tarRel}`;
 
-		const relationMatchStart = `${dirRel ? relVar : ''} (${linkField.plays}: $${linkField.plays}`;
+		const relationMatchStart = `${dirRel ? relVar : ''} (${linkField.plays}: $${thingPath}`;
+
 		const relationMatchOpposite = linkField.oppositeLinkFieldsPlayedBy.map((link) =>
 			!dirRel ? `${link.plays}: $${link.plays}` : null,
 		);
@@ -89,23 +88,47 @@ export const buildTQLFetch: PipelineOperation = async (req) => {
 		const relationMatchEnd = `) isa ${relationPath};`;
 
 		const relationIdFilters = linkField.oppositeLinkFieldsPlayedBy
-			.map(
-				// TODO: composite ids.
-				// TODO: Also id is not always called id
-				(link) =>
-					`$${dirRel ? link.thing : link.plays} isa ${link.thing}, has id $${dirRel ? link.thing : link.plays}_id;`,
-			)
+			.map((link) => {
+				const target = link.plays;
+
+				return `$${target} isa ${link.thing}, has id $${target}_id;`;
+			})
 			.join(' ');
 
-		const fetch = `fetch $${linkField.plays}: attribute;`;
-		const request = `${entityMatch} ${roles} ${relationMatchEnd} ${relationIdFilters} ${fetch}`;
-		return { relation: relationPath, entity: thingPath, request };
+		[linkField.plays, ...linkField.oppositeLinkFieldsPlayedBy.map((link) => link.plays)];
+
+		const fetchTarget = `
+			${linkField.oppositeLinkFieldsPlayedBy
+				.map((link) => {
+					return `$${link.plays}: attribute;`;
+				})
+				.join(' ')}`;
+
+		// const queryStr = `
+		//   match $User isa! User, has attribute $attribute, has id $User_id;
+		//   fetch $User: attribute;
+		//   accounts: {
+		//     match
+		//       (user: $User,accounts: $accounts ) isa User-Accounts; $accounts isa Account, has id $accounts_id;
+		//     fetch
+		//     $accounts: attribute;
+		//   };
+		// `;
+
+		const request = `${linkField.path}: { match ${roles} ${relationMatchEnd} ${relationIdFilters} fetch ${fetchTarget} };`;
+		return request;
 	});
 
+	console.log('hi str', relations?.join(EOL));
+
+	console.log('check queryStr', queryStr);
+
+	// + relations?.join(EOL),
+
 	req.tqlRequest = {
-		entity: queryStr,
-		...(rolesObj?.length ? { roles: rolesObj } : {}),
-		...(relations?.length ? { relations } : {}),
+		entity: queryStr + relations?.join(EOL),
+		// ...(rolesObj?.length ? { roles: rolesObj } : {}),
+		// ...(relations?.length ? { relations } : {}),
 	};
 	console.log('req.tqlRequest', req.tqlRequest);
 };
