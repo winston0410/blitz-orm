@@ -2,6 +2,7 @@ import type { PipelineOperation } from '../pipeline';
 import type { JSON } from 'typedb-driver';
 import type { FromSchema } from 'json-schema-to-ts';
 import Ajv from 'ajv';
+import { getPath } from '../../helpers';
 
 const schema = {
 	type: 'object',
@@ -69,8 +70,16 @@ const parseAttributes = (req: Parameters<PipelineOperation>[0], payload: JSON, r
 		if (type.label === query.$entity.name) {
 			// dealing with the main entity
 			for (const attr of attribute) {
-				result[attr.type.label] = attr.value;
+				const key = getPath(attr.type.label);
+				result[key] = attr.value;
+
+				if (key === 'id') {
+					// add preserved field
+					result['$id'] = attr.value;
+				}
 			}
+			// add preserved field
+			result['$entity'] = query.$entity.name;
 		} else {
 			// dealing with relations and roles, only return id at the moment
 			for (const attr of attribute.filter((attr) => attr.type.label === 'id')) {
