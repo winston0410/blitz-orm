@@ -1,5 +1,3 @@
-import { listify } from 'radash';
-
 import { getLocalFilters } from '../../helpers';
 import type { PipelineOperation } from '../pipeline';
 import { EOL } from 'os';
@@ -34,25 +32,11 @@ export const buildTQLFetch: PipelineOperation = async (req) => {
 
 	const localFiltersTql = getLocalFilters(currentThingSchema, query);
 
-	const allRoles =
-		'roles' in currentThingSchema
-			? listify(currentThingSchema.roles, (k: string, v) => ({
-					path: k,
-					var: `$${k}`,
-					schema: v,
-				}))
-			: [];
-
 	const queryStr = `match $${thingPath}  isa! ${thingPath}, has attribute $attribute ${localFiltersTql} ${idFilter} fetch $${thingPath}: attribute;`;
 
 	const relations = currentThingSchema.linkFields?.flatMap((linkField) => {
 		// if the target is the relation
 		const dirRel = linkField.target === 'relation'; // direct relation
-
-		// FIXME handle later
-		if (dirRel) {
-			return '';
-		}
 
 		const tarRel = linkField.relation;
 		const relVar = `$${tarRel}`;
@@ -77,7 +61,7 @@ export const buildTQLFetch: PipelineOperation = async (req) => {
 			.map((link) => {
 				const target = link.plays;
 
-				return `$${target} isa ${link.thing}, has id $${target}_id;`;
+				return dirRel ? '' : `$${target} isa ${link.thing}, has id $${target}_id;`;
 			})
 			.join(' ');
 
@@ -86,7 +70,7 @@ export const buildTQLFetch: PipelineOperation = async (req) => {
 		const fetchTarget = `
 			${linkField.oppositeLinkFieldsPlayedBy
 				.map((link) => {
-					return `$${link.plays}: attribute;`;
+					return `$${dirRel ? link.thing : link.plays}: attribute;`;
 				})
 				.join(' ')}`;
 
@@ -94,7 +78,6 @@ export const buildTQLFetch: PipelineOperation = async (req) => {
 
 		return request;
 	});
-
 	req.tqlRequest = {
 		entity: queryStr + relations?.join(EOL),
 	};

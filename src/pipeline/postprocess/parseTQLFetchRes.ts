@@ -83,18 +83,32 @@ const parseAttributes = (req: Parameters<PipelineOperation>[0], payload: JSON, r
 		} else {
 			// dealing with relations and roles, only return id at the moment
 			for (const attr of attribute.filter((attr) => attr.type.label === 'id')) {
-				const currOppositeLinkfield = req.schema.entities[type.label].linkFields?.find(
-					({ oppositeLinkFieldsPlayedBy }) => oppositeLinkFieldsPlayedBy[0].thing === query.$entity.name,
-				);
+				const dirRel = typeof req.schema.entities[type.label] === 'undefined';
 
-				if (!currOppositeLinkfield) {
-					throw new Error('missing oppositeLinkfield');
+				let key: string | undefined;
+
+				if (dirRel) {
+					const currField = req.schema.entities[query.$entity.name]?.linkFields?.find(
+						({ relation }) => relation === type.label,
+					);
+
+					key = currField?.path;
+				} else {
+					const currField = req.schema.entities[type.label]?.linkFields?.find(({ oppositeLinkFieldsPlayedBy }) => {
+						return oppositeLinkFieldsPlayedBy.find(({ thing }) => thing === query.$entity.name);
+					});
+
+					key = currField?.plays;
 				}
 
-				if (Array.isArray(result[currOppositeLinkfield.plays])) {
-					(result[getPath(currOppositeLinkfield.plays)] as Array<string>).push(attr.value);
+				if (!key) {
+					throw new Error('key is empty');
+				}
+
+				if (Array.isArray(result[getPath(key)])) {
+					(result[getPath(key)] as Array<string>).push(attr.value);
 				} else {
-					result[getPath(currOppositeLinkfield.plays)] = [attr.value];
+					result[getPath(key)] = [attr.value];
 				}
 			}
 		}
@@ -113,9 +127,6 @@ export const parseTQLFetchRes: PipelineOperation = async (req, res) => {
 	} else if (!rawTqlRes) {
 		throw new Error('TQL query not executed');
 	}
-
-	// console.log('check schema', JSON.stringify(req.schema, null, 2));
-	// console.log('what is entities', schema);
 
 	if (!rawTqlRes.entityJsonObjs) {
 		throw new Error('entityJsonObjs is undefined');
