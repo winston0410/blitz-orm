@@ -54,7 +54,10 @@ const parseAttributes = (req: Parameters<PipelineOperation>[0], payload: JSON, r
 		throw new Error('unimplmented');
 	}
 
-	// @ts-expect-error fix later
+	if (typeof payload !== 'object') {
+		throw new Error('unexpected payload');
+	}
+
 	if ('attribute' in payload) {
 		const ajv = new Ajv();
 		const validate = ajv.compile(schema);
