@@ -27,45 +27,12 @@ export const runTQLFetch: PipelineOperation = async (req, res) => {
 	}
 	const entityStream = transaction.query.fetch(tqlRequest.entity);
 
-	const rolesStreams = tqlRequest.roles?.map((role) => ({
-		...role,
-		stream: transaction.query.fetch(role.request),
-	}));
+	const entityJsonObjs = await entityStream.collect();
 
-	const relationStreams = tqlRequest.relations?.map((relation) => ({
-		...relation,
-		stream: transaction.query.fetch(relation.request),
-	}));
-	const entityConceptMapGroups = await entityStream.collect();
-
-	/// The new json structure. Once attibutes are natively packed we will refacto the queries and use this
-	// const json = entityConceptMapGroups.flatMap((x) => x.conceptMaps.map((y) => y.toJSONRecord()));
-	// console.log('json', json);
-	const rolesConceptMapGroups = await Promise.all(
-		rolesStreams?.map(async (role) => ({
-			path: role.path,
-			ownerPath: role.owner,
-			conceptMapGroups: [],
-			jsonObjs: await role.stream.collect(),
-		})) || [],
-	);
-
-	const relationConceptMapGroups = await Promise.all(
-		relationStreams?.map(async (relation) => ({
-			relation: relation.relation,
-			entity: relation.entity,
-			conceptMapGroups: [],
-			jsonObjs: await relation.stream.collect(),
-		})) || [],
-	);
 	await transaction.close();
 
 	res.rawTqlRes = {
-		entityJsonObjs: entityConceptMapGroups,
-		...(rolesConceptMapGroups?.length && { roles: rolesConceptMapGroups }),
-		...(relationConceptMapGroups?.length && {
-			relations: relationConceptMapGroups,
-		}),
+		entityJsonObjs,
 	};
 	// console.log('rawTqlRes', JSON.stringify(res.rawTqlRes, null, 2));
 };
